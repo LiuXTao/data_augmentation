@@ -113,7 +113,8 @@ def main():
         os.makedirs(rotated_imgpath)
 
     for angle in (30, 90, 270, 330):
-
+        if angle != 90:
+            continue
         if not os.path.exists(rotated_imgpath+'/'+str(angle)):
             os.makedirs(rotated_imgpath+'/'+str(angle))
 

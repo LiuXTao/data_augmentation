@@ -259,20 +259,20 @@ def fliplr_boxes(boxes, W):
 
 
 def main():
-    img_read_path = "./origin data/origin/imgs"
-    xml_read_path = "./origin data/origin/xml"
+    img_read_path = "./origin data/forth/imgs"
+    xml_read_path = "./origin data/forth/xml"
 
-    img_write_path = "./origin data/lr_flip"  # 图片和xml水平翻转后的写入文件夹
-    xml_write_path = "./origin data/lr_flip"
+    img_write_path = "./origin data/forth_flip"  # 图片和xml水平翻转后的写入文件夹
+    xml_write_path = "./origin data/forth_flip"
 
     if not os.path.exists(img_write_path):
         os.makedirs(img_write_path)
 
     filenames = getFilenames(xml_read_path)
 
-    CLASS_NAMES = ('door flame', 'person', 'aa')  # 这里有个bug懒得改，一个类别时也要写两个进去
+    CLASS_NAMES = ('door flame', 'person', 'tvmonitor', 'aa')  # 这里有个bug懒得改，一个类别时也要写两个进去
 
-    count = 8000
+    count = 12001
 
     wrtin_img_folder_name = "fliped"
 

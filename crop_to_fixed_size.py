@@ -178,21 +178,21 @@ def crop_img_xml_from_dir(imgs_dir, xmls_dir, imgs_save_dir, xmls_save_dir, crop
 
 
 def main():
-    imgs_dir = './origin data/origin/imgs/'
-    xmls_dir = './origin data/origin/xml/'
+    imgs_dir = './origin data/forth/imgs2/'
+    xmls_dir = './origin data/forth/xml2/'
 
-    imgs_save_dir = './origin data/crop/'
+    imgs_save_dir = './origin data/forth/imgs2/'
     if not os.path.exists(imgs_save_dir):
         os.makedirs(imgs_save_dir)
-    xmls_save_dir = './origin data/crop/'
+    xmls_save_dir = './origin data/forth/imgs2/'
     if not os.path.exists(xmls_save_dir):
         os.makedirs(xmls_save_dir)
 
     crop_type = 'RANDOM_CROP'  # ['RANDOM_CROP','CENTER_CROP','FIVE_CROP']
-    crop_n = 2  # 每张原图 crop 5张图
+    crop_n = 2 # 每张原图 crop 5张图
     dsize = (400, 300)  # 指定裁剪尺度
     fw = 0.4
-    fh = 0.5  # 指定裁剪尺度比例
+    fh = 0.4  # 指定裁剪尺度比例
     random_wh = True  # 是否随机尺度裁剪，若为True,则dsize指定的尺度失效
     iou_thr = 0.25  # 裁剪后目标框大小与原框大小的iou值大于该阈值则保留
     # print(type(crop_n))
