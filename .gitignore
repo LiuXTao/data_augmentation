@@ -1,3 +1,4 @@
-/origin data/
+/detection_data/
+/segmentation_data/
 /.idea/
 __pycache__

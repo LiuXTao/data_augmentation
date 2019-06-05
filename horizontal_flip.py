@@ -1,10 +1,19 @@
+'''
+@File     : horizontal_flip.py
+@Copyright:
+@author   : lxt
+@Date     : 2019/3/17
+@Desc     :
+'''
+
+# 用于水平翻转
+
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import random
 import os
 import matplotlib.patches as patches
-
 from lxml.etree import Element, SubElement, tostring
 from xml.dom.minidom import parseString
 import xml.etree.ElementTree as ET
@@ -12,7 +21,6 @@ import numpy as np
 
 def showimg(img):
     channelNum = len(img.shape)
-
     if channelNum == 3:
         fig = plt.subplots(1), plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     if channelNum == 2:
@@ -26,54 +34,21 @@ def scaleimg(img, scale=1.0):
     del H, W, C, size, scale
     return img.copy()
 
-
-# img = rotateimg(image, angle)
 def rotateimg(image, angle, center=None, scale=1.0):
     # 获取图像尺寸
     (h, w) = image.shape[:2]
-
     # 若未指定旋转中心，则将图像中心设为旋转中心
     if center is None:
         center = (w / 2, h / 2)
-
     # 执行旋转
     M = cv2.getRotationMatrix2D(center, angle, scale)  # 给的角度为正的时候，则逆时针旋转
     rotated = cv2.warpAffine(image, M, (w, h), flags=cv2.INTER_CUBIC)
     #    rotated = cv2.warpAffine(image, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
-
     return rotated  # 返回旋转后的图像, angle是角度制，不是弧度制
 
-
-'''
-1， 读取xml返回结果
-    输入：CLASS_NAMES元组   xml路径
-    返回：(H, W, boxes)   boxes是一个二维np数组，6列分别为
-          id classid xmin xmax ymin ymax
-           0       1    2    3    4    5
-
-2,  将boxes  CLASS_NAMES  H W 信息写入xml
-    输入：boxes  CLASS_NAMES  H W   xml路径
-    输出：硬盘上的一个xml
-
-3， 根据 img，boxes数组，class_names，画出一个图来
-    输入：img，boxes，class_names
-'''
-
-
-
-# CLASS_NAMES = ('person', 'dog')  # 下标从0开始，这里可以没有顺序，最好有顺序
-
-#          id classid xmin xmax ymin ymax
-#           0       1    2    3    4    5
 def xml2boxes(xmlpath, CLASS_NAMES):
-    print("xmlpath:", xmlpath)
-
     cls_to_idx = dict(zip(CLASS_NAMES, range(len(CLASS_NAMES))))
     idx_to_cls = dict(zip(range(len(CLASS_NAMES)), CLASS_NAMES))
-
-    #    print(cls_to_idx)
-    #    print(idx_to_cls)
-
     annotations = ET.parse(xmlpath)
     # 获得 HWC
     size = annotations.find('size')
@@ -233,10 +208,8 @@ def drawboxes(imgpath, boxes, CLASS_NAMES):
 
 
 def getFilenames(filepath):
-    '''得到一个文件夹下所有的文件名，不包含后缀
-    '''
+    '''得到一个文件夹下所有的文件名，不包含后缀'''
     filelist = os.listdir(filepath)
-
     filenames = []
 
     for files in filelist:
@@ -259,52 +232,40 @@ def fliplr_boxes(boxes, W):
 
 
 def main():
-    img_read_path = "./origin data/forth/imgs"
-    xml_read_path = "./origin data/forth/xml"
-
-    img_write_path = "./origin data/forth_flip"  # 图片和xml水平翻转后的写入文件夹
-    xml_write_path = "./origin data/forth_flip"
-
+    img_read_path = "./detection_data/forth/imgs"
+    xml_read_path = "./detection_data/forth/xml"
+    img_write_path = "./detection_data/forth_flip"  # 图片和xml水平翻转后的写入文件夹
+    xml_write_path = "./detection_data/forth_flip"
     if not os.path.exists(img_write_path):
         os.makedirs(img_write_path)
-
     filenames = getFilenames(xml_read_path)
-
-    CLASS_NAMES = ('door flame', 'person', 'tvmonitor', 'aa')  # 这里有个bug懒得改，一个类别时也要写两个进去
+    CLASS_NAMES = ('door flame', 'person', 'tvmonitor', 'aa')  # 一个类别时也要写两个进去
 
     count = 12001
-
     wrtin_img_folder_name = "fliped"
-
-    # for i in range(len(filenames)):
-    #     name = filenames[i]
-
     for f in os.listdir(img_read_path):
         name = os.path.splitext(f)
-
         imgname = img_read_path + "/" + f
         img = cv2.imread(imgname)
-
         xmlname = xml_read_path + "/" + str(name[0]) + ".xml"
         boxes, H, W = xml2boxes(xmlname, CLASS_NAMES)
-        #    print("xmlname:", xmlname)
 
         H, W, C = img.shape
         ##############################
         fliped_boxes = fliplr_boxes(boxes, W)
         fliped_img = cv2.flip(img, 1)
         ##############################
-        FileName = str(count)
-
-        jpgpath = img_write_path + "/" + FileName + ".jpg"
+        fileName = str(count)
+        jpgpath = img_write_path + "/" + fileName + ".jpg"
         cv2.imwrite(jpgpath, fliped_img)
 
-        xmlpath = xml_write_path + "/" + FileName + ".xml"
-        boxes2xml_labelImg(fliped_boxes, CLASS_NAMES, H, W, xmlpath, wrtin_img_folder_name, FileName, jpgpath)
+        xmlpath = xml_write_path + "/" + fileName + ".xml"
+        boxes2xml_labelImg(fliped_boxes, CLASS_NAMES, H, W, xmlpath, wrtin_img_folder_name, fileName, jpgpath)
 
         count = count + 1
     print("completed", count)
 
 if __name__ == '__main__':
     main()
+
 

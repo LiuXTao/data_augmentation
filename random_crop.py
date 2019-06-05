@@ -1,3 +1,13 @@
+'''
+@File     : random_crop.py
+@Copyright:
+@author   : lxt
+@Date     : 2019/3/16
+@Desc     :
+'''
+
+# 用于随机裁剪图片
+
 import cv2
 import os
 import random
@@ -7,15 +17,7 @@ from voc_xml import CreateXML
 
 
 def crop_img(src, top_left_x, top_left_y, crop_w, crop_h):
-    '''裁剪图像
-    Args:
-        src: 源图像
-        top_left,top_right:裁剪图像左上角坐标
-        crop_w,crop_h：裁剪图像宽高
-    return：
-        crop_img:裁剪后的图像
-        None:裁剪尺寸错误
-    '''
+    '''裁剪图像    '''
     rows, cols, n_channel = src.shape
     row_min, col_min = int(top_left_y), int(top_left_x)
     row_max, col_max = int(row_min + crop_h), int(col_min + crop_w)
@@ -23,19 +25,13 @@ def crop_img(src, top_left_x, top_left_y, crop_w, crop_h):
         print("crop size err: src->%dx%d,crop->top_left(%d,%d) %dx%d" % (
         cols, rows, col_min, row_min, int(crop_w), int(crop_h)))
         return None
+    # 图像矩阵裁剪
     crop_img = src[row_min:row_max, col_min:col_max]
     return crop_img
 
 
 def crop_xy(x, y, top_left_x, top_left_y, crop_w, crop_h):
-    ''' 坐标平移变换
-    Args:
-        x,y:待变换坐标
-        top_left_x,top_left_y:裁剪图像左上角坐标
-        crop_w,crop_h:裁剪部分图像宽高
-    return:
-        crop_x,crop_y
-    '''
+    ''' 坐标平移变换    '''
     crop_x = int(x - top_left_x)
     crop_y = int(y - top_left_y)
     crop_x = utils.confine(crop_x, 0, crop_w - 1)
@@ -44,15 +40,7 @@ def crop_xy(x, y, top_left_x, top_left_y, crop_w, crop_h):
 
 
 def crop_box(box, top_left_x, top_left_y, crop_w, crop_h, iou_thr=0.5):
-    '''目标框坐标平移变换
-    Args:
-        box:目标框坐标[xmin,ymin,xmax,ymax]
-        top_left_x,top_left_y:裁剪图像左上角坐标
-        crop_w,crop_h:裁剪部分图像宽高
-        iou_thr: iou阈值,去除裁剪后过小目标
-    return:
-        crop_box:平移变换结果[xmin,ymin,xmax,ymax]
-    '''
+    '''目标框坐标平移变换'''
     xmin, ymin = crop_xy(box[0], box[1], top_left_x, top_left_y, crop_w, crop_h)
     xmax, ymax = crop_xy(box[2], box[3], top_left_x, top_left_y, crop_w, crop_h)
     croped_box = [xmin, ymin, xmax, ymax]
@@ -62,16 +50,7 @@ def crop_box(box, top_left_x, top_left_y, crop_w, crop_h, iou_thr=0.5):
 
 
 def crop_xml(crop_img_name, xml_tree, top_left_x, top_left_y, crop_w, crop_h, iou_thr=0.5):
-    '''xml目标框裁剪变换
-    Args:
-        crop_img_name:裁剪图片命名
-        xml_tree：待crop的xml ET.parse()
-        top_left_x,top_left_y: 裁剪图像左上角坐标
-        crop_w,crop_h: 裁剪图像宽高
-        iou_thr: iou阈值
-    return:
-        createdxml : 创建的xml CreateXML对象
-    '''
+    '''xml目标框裁剪变换'''
     root = xml_tree.getroot()
     size = root.find('size')
     depth = int(size.find('depth').text)
@@ -90,19 +69,8 @@ def crop_xml(crop_img_name, xml_tree, top_left_x, top_left_y, crop_w, crop_h, io
     return createdxml
 
 
-def crop_img_xml(img, xml_tree, crop_img_name, top_left_x, top_left_y, crop_w, crop_h, iou_thr):
-    '''裁剪图像和xml目标框
-    Args:
-        img：源图像
-        crop_img_name:裁剪图片命名
-        xml_tree：待crop的xml ET.parse()
-        top_left_x,top_left_y: 裁剪图像左上角坐标
-        crop_w,crop_h: 裁剪图像宽高
-        iou_thr: iou阈值
-    return:
-        croped_img,croped_xml : 裁剪完成的图像和xml文件
-        None:裁剪尺寸错误
-    '''
+def crop_img_and_xml(img, xml_tree, crop_img_name, top_left_x, top_left_y, crop_w, crop_h, iou_thr):
+    '''裁剪图像和xml目标框'''
     croped_img = crop_img(img, top_left_x, top_left_y, crop_w, crop_h)
     if croped_img is None:
         return None
@@ -110,20 +78,8 @@ def crop_img_xml(img, xml_tree, crop_img_name, top_left_x, top_left_y, crop_w, c
     return croped_img, croped_xml
 
 
-def crop_img_xml_from_dir(imgs_dir, xmls_dir, imgs_save_dir, xmls_save_dir, crop_type='RANDOM_CROP', crop_n=1, dsize=(0, 0), fw=1.0, fh=1.0, random_wh=False, iou_thr=0.5):
-    '''随机裁剪指定路径下的图片和xml
-    Args:
-        imgs_dir,xmls_dir: 待放缩图片、原始xml文件存储路径
-        imgs_save_dir，xmls_save_dir: 处理完成的图片、xml文件存储路径
-        img_suffix: 图片可能的后缀名['.jpg','.png','.bmp',..]
-        name_suffix: 处理完成的图片、xml的命名标识
-        crop_type:裁剪风格 ['RANDOM_CROP','CENTER_CROP','FIVE_CROP']
-        crop_n: 每原图生成裁剪图个数
-        dsize:指定crop宽高（w,h），与random_wh==True互斥生效
-        fw,fh: 当random_wh==False时为crop比例，否则为随机crop的宽高比例下限
-        random_wh：随机选定裁剪宽高
-        iou_thr: iou阈值
-    '''
+def random_crop(imgs_dir, xmls_dir, imgs_save_dir, xmls_save_dir, crop_type='RANDOM_CROP', crop_n=1, dsize=(0, 0), fw=1.0, fh=1.0, random_wh=False, iou_thr=0.5):
+    '''随机裁剪指定路径下的图片和xml '''
 
     for file in os.listdir(imgs_dir):
         print(file)
@@ -168,8 +124,8 @@ def crop_img_xml_from_dir(imgs_dir, xmls_dir, imgs_save_dir, xmls_save_dir, crop
                 print('crop type wrong! expect [RANDOM_CROP,CENTER_CROP,FIVE_CROP]')
 
             croped_img_name = name[0] + '_' + str(crop_top_left_x) + '_' + str(crop_top_left_y) + '_wh' + str(crop_imgw) + 'x' + str(crop_imgh) + name[1]
-
-            croped = crop_img_xml(img, voc_xml.get_xml_tree(xml_file), croped_img_name, crop_top_left_x,
+            # 调用剪切和xml文件
+            croped = crop_img_and_xml(img, voc_xml.get_xml_tree(xml_file), croped_img_name, crop_top_left_x,
                                   crop_top_left_y, crop_imgw, crop_imgh, iou_thr)
             imgcrop, xmlcrop = croped[0], croped[1]
             cv2.imwrite(os.path.join(imgs_save_dir, croped_img_name), imgcrop)
@@ -178,13 +134,12 @@ def crop_img_xml_from_dir(imgs_dir, xmls_dir, imgs_save_dir, xmls_save_dir, crop
 
 
 def main():
-    imgs_dir = './origin data/forth/imgs2/'
-    xmls_dir = './origin data/forth/xml2/'
-
-    imgs_save_dir = './origin data/forth/imgs2/'
+    imgs_dir = './detection_data/forth/imgs2/'
+    xmls_dir = './detection_data/forth/xml2/'
+    imgs_save_dir = './detection_data/forth/imgs2/'
     if not os.path.exists(imgs_save_dir):
         os.makedirs(imgs_save_dir)
-    xmls_save_dir = './origin data/forth/imgs2/'
+    xmls_save_dir = './detection_data/forth/imgs2/'
     if not os.path.exists(xmls_save_dir):
         os.makedirs(xmls_save_dir)
 
@@ -196,7 +151,7 @@ def main():
     random_wh = True  # 是否随机尺度裁剪，若为True,则dsize指定的尺度失效
     iou_thr = 0.25  # 裁剪后目标框大小与原框大小的iou值大于该阈值则保留
     # print(type(crop_n))
-    crop_img_xml_from_dir(imgs_dir, xmls_dir, imgs_save_dir, xmls_save_dir, crop_type, crop_n, dsize, fw, fh, random_wh, iou_thr)
+    random_crop(imgs_dir, xmls_dir, imgs_save_dir, xmls_save_dir, crop_type, crop_n, dsize, fw, fh, random_wh, iou_thr)
     print("completed")
 
 
